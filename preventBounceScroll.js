@@ -6,8 +6,11 @@
         return isExtraElement(element) || isScrollElement(element);
     }
     function isExtraElement(element){
-        if(element.tagName === 'INPUT' && element.type === 'range'){
-            return true;
+        switch(true){
+            case element.tagName === 'INPUT' && element.type === 'range':;
+                return true;
+            default :
+                return false;
         }
     }
     function isScrollElement(element) {
