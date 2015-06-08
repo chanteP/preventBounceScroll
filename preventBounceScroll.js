@@ -62,6 +62,13 @@ module.exports = {
             document.addEventListener('touchmove', bindFunc.move, false);
             document.addEventListener('touchstart', bindFunc.start, false);
         }
+        return this;
+    },
+    move : function(nodes){
+        [].forEach.call(nodes || [], function(el){
+            (outerScrollBox ? outerScrollBox.parentNode : document.body).appendChild(el);
+        });
+        return this;
     },
     destory : function(){
         stat = false;
