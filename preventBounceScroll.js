@@ -1,3 +1,8 @@
+var startPos, curPos;
+var outerScrollBox;
+
+var stat = false;
+
 var notPreventScrollElement = function(element){
     return isExtraElement(element) || isScrollElement(element);
 }
@@ -21,21 +26,46 @@ var isScrollElement = function(element) {
     return false;
 }
 var checkScrollElement = function(element){
-    if(element.scrollHeight <= element.clientHeight){return false;}
-    //任性
-    return window.getComputedStyle(element)['-webkit-overflow-scrolling'] === 'touch';
+    var style = window.getComputedStyle(element);
+    return (style['overflow'] === 'scroll' || style['overflow'] === 'auto' || style['overflowY'] === 'scroll' || style['overflowY'] === 'auto')
+        && element.scrollHeight > element.clientHeight
+        && !(startPos <= curPos && element.scrollTop === 0)
+        && !(startPos >= curPos && element.scrollHeight - element.scrollTop === window.parseInt(style.height));
+}
+var checkOuterScroll = function(outerNode){
+    if(outerNode.scrollTop === 0){
+        outerNode.scrollTop = 1;
+        return;
+    }
+    var outerHeight = window.parseInt(getComputedStyle(outerNode).height);
+    if(outerNode.scrollHeight - outerNode.scrollTop === outerHeight){
+        outerNode.scrollTop = outerNode.scrollHeight - outerHeight - 1;
+    }
 }
 
 //bind
-var bindFunc = function(e) {
-    notPreventScrollElement(e.target) || e.preventDefault();
+var bindFunc = {
+    move : function(e) {
+        curPos = e.touches ? e.touches[0].screenY : e.screenY;
+        notPreventScrollElement(e.target) || e.preventDefault();
+    },
+    start : function(e){
+        outerScrollBox && checkOuterScroll(outerScrollBox);
+        startPos = e.touches ? e.touches[0].screenY : e.screenY;
+    }
 }
-
 module.exports = {
-    bind : function(){
-        document.addEventListener('touchmove', bindFunc, false);
+    bind : function(outer){
+        outerScrollBox = outer;
+        if(!stat){
+            stat = true;
+            document.addEventListener('touchmove', bindFunc.move, false);
+            document.addEventListener('touchstart', bindFunc.start, false);
+        }
     },
     destory : function(){
-        document.removeEventListener('touchmove', bindFunc, false);
+        stat = false;
+        document.removeEventListener('touchmove', bindFunc.move, false);
+        document.removeEventListener('touchstart', bindFunc.start, false);
     }
 }

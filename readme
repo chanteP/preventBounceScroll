@@ -1,0 +1,12 @@
+##移动设备web开发防滚插件
+
+向上找到能滚的元素然后让它滚。因为太麻烦所以只写了纵向滚，<del>overflow-x是什么能吃？</del>。
+
+判断条件:
+1. <em style="color:#E45212;">getComputedStyle(element).overflow</em> 或者 <em style="color:#E45212;">getComputedStyle(element).overflowY</em> 的值为 <em style="color:#E45212;">scroll</em> 或者 <em style="color:#E45212;">auto</em>
+2. 向上滚动并且能滚
+3. 向下滚动并且能滚
+4. 自己看代码
+
+为了效果好点所以bind的时候可以传入node做最外层能滚的东西做outer以保证妥妥的能滚。只能存在一个outer
+
