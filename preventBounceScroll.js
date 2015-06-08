@@ -1,37 +1,55 @@
 var startPos, curPos;
-var outerScrollBox;
 
 var stat = false;
+var defaultConfig = {
+    //其他不爽的element
+    isExtraElement : function(element){
+        switch(true){
+            case element.tagName === 'INPUT' && element.type === 'range':;
+                return true;
+            default :
+                return false;
+        }
+    },
+    //外层滚动回弹，false为顶部、底部滚动时固定
+    outerBounce : true
+};
+var config = {};
 
 var notPreventScrollElement = function(element){
-    return isExtraElement(element) || isScrollElement(element);
-}
-//其他不爽的element
-var isExtraElement = function(element){
-    switch(true){
-        case element.tagName === 'INPUT' && element.type === 'range':;
-            return true;
-        default :
-            return false;
-    }
+    return config.isExtraElement(element) || isScrollElement(element);
 }
 //能滚的element
 var isScrollElement = function(element) {
     while(element) {
-        if (checkScrollElement(element)){
+        if(checkScrollElement(element)){
             return element;
         }
         element = element.parentElement;
     }
     return false;
 }
-var checkScrollElement = function(element){
+//获取最外层能滚的element
+var getOuterScrollElement = function(element){
+    var target;
+    while(element){
+        if(checkScrollElement(element, true)){
+            target = element;
+        }
+        element = element.parentElement;
+    }
+    return target;
+}
+
+var checkScrollElement = function(element, scrollOnly){
     var style = window.getComputedStyle(element);
     return (style['overflow'] === 'scroll' || style['overflow'] === 'auto' || style['overflowY'] === 'scroll' || style['overflowY'] === 'auto')
-        && element.scrollHeight > element.clientHeight
-        && !(startPos <= curPos && element.scrollTop === 0)
-        && !(startPos >= curPos && element.scrollHeight - element.scrollTop === window.parseInt(style.height));
+        && (scrollOnly || 
+            element.scrollHeight > element.clientHeight
+            && !(startPos <= curPos && element.scrollTop === 0)
+            && !(startPos >= curPos && element.scrollHeight - element.scrollTop === window.parseInt(style.height)));
 }
+//外层滚动
 var checkOuterScroll = function(outerNode){
     if(outerNode.scrollTop === 0){
         outerNode.scrollTop = 1;
@@ -50,13 +68,17 @@ var bindFunc = {
         notPreventScrollElement(e.target) || e.preventDefault();
     },
     start : function(e){
-        outerScrollBox && checkOuterScroll(outerScrollBox);
+        if(config.outerBounce){
+            var outerScrollBox = getOuterScrollElement(e.target);
+            if(outerScrollBox && !notPreventScrollElement(e.target)){
+                checkOuterScroll(outerScrollBox);
+            }
+        }
         startPos = e.touches ? e.touches[0].screenY : e.screenY;
     }
 }
-module.exports = {
-    bind : function(outer){
-        outerScrollBox = outer;
+var api = module.exports = {
+    bind : function(){
         if(!stat){
             stat = true;
             document.addEventListener('touchmove', bindFunc.move, false);
@@ -64,9 +86,15 @@ module.exports = {
         }
         return this;
     },
-    move : function(nodes){
+    config : function(cfg){
+        cfg = cfg || {};
+        config.isExtraElement = cfg.isExtraElement || defaultConfig.isExtraElement;
+        config.outerBounce = 'outerBounce' in cfg ? cfg.outerBounce : defaultConfig.outerBounce;
+        return this;
+    },
+    move : function(nodes, target){
         [].forEach.call(nodes || [], function(el){
-            (outerScrollBox ? outerScrollBox.parentNode : document.body).appendChild(el);
+            (target || document.body).appendChild(el);
         });
         return this;
     },
@@ -75,4 +103,5 @@ module.exports = {
         document.removeEventListener('touchmove', bindFunc.move, false);
         document.removeEventListener('touchstart', bindFunc.start, false);
     }
-}
+};
+api.config();

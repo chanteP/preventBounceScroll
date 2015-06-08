@@ -8,11 +8,15 @@
 3. 向下滚动并且能滚
 4. 自己看代码
 
-为了效果好点所以bind的时候可以传入node做最外层能滚的东西做outer以保证妥妥的能滚。只能存在一个outer
+config:
+1. <em style="color:#E45212;">isExtraElement</em> 排除节点判定
+2. <em style="color:#E45212;">outerBounce</em> 外层滚动回弹，false为顶部、底部滚动时固定
 
 
     require('np-preventBounceScroll')
-        //绑定事件然后给wrapper加特效
-        .bind(document.getElementById('wrapper'))
-        //把对应selector的节点移动到outer外面||body里面
+        .config({
+            //config xxx
+        })
+        .bind()
+        //把对应selector的节点移动到body里面
         .move(document.querySelector('[data-position="fixed"]'));
