@@ -1,5 +1,5 @@
 {
-  "name": "np-preventBounceScroll",
+  "name": "np-scrollp",
   "version": "1.0.0",
   "description": "向上找到能滚的元素然后让它滚。因为太麻烦所以只写了纵向滚，<del>overflow-x是什么能吃？</del>。",
   "main": "preventBounceScroll.js",
