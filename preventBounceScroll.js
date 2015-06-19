@@ -1,4 +1,4 @@
-var startPos, curPos;
+var startPosY, startPosX, curPosY, curPosX;
 
 var stat = false;
 var defaultConfig = {
@@ -43,28 +43,60 @@ var getOuterScrollElement = function(element){
 
 var checkScrollElement = function(element, scrollOnly){
     var style = window.getComputedStyle(element);
-    return (style['overflow'] === 'scroll' || style['overflow'] === 'auto' || style['overflowY'] === 'scroll' || style['overflowY'] === 'auto')
-        && (scrollOnly || 
+    return (
+            style['overflow'] === 'scroll' 
+            || style['overflow'] === 'auto' && style['overflowY'] !== 'hidden' 
+            || style['overflowY'] === 'scroll' 
+            || style['overflowY'] === 'auto'
+        )
+        && (
+            scrollOnly || 
             element.scrollHeight > element.clientHeight
-            && !(startPos <= curPos && element.scrollTop === 0)
-            && !(startPos >= curPos && element.scrollHeight - element.scrollTop === window.parseInt(style.height)));
+            && !(startPosY <= curPosY && element.scrollTop === 0)
+            && !(startPosY >= curPosY && element.scrollHeight - element.scrollTop === window.parseInt(style.height))
+        ) || (
+            style['overflow'] === 'scroll' 
+            || style['overflow'] === 'auto' && style['overflowX'] !== 'hidden' 
+            || style['overflowX'] === 'scroll' 
+            || style['overflowX'] === 'auto'
+        )
+        && (
+            scrollOnly || 
+            element.scrollWidth > element.clientWidth
+            && !(startPosX <= curPosX && element.scrollLeft === 0)
+            && !(startPosX >= curPosX && element.scrollWidth - element.scrollLeft === window.parseInt(style.width))
+        );
 }
 //外层滚动
 var checkOuterScroll = function(outerNode){
-    if(outerNode.scrollTop === 0){
-        outerNode.scrollTop = 1;
-        return;
+    var style = getComputedStyle(outerNode);
+    if(style.overflowY === 'auto' || style.overflowY === 'scroll'){
+        if(outerNode.scrollTop === 0){
+            outerNode.scrollTop = 1;
+            return;
+        }
+        var outerHeight = window.parseInt(getComputedStyle(outerNode).height);
+        if(outerNode.scrollHeight - outerNode.scrollTop === outerHeight){
+            outerNode.scrollTop = outerNode.scrollHeight - outerHeight - 1;
+        }
     }
-    var outerHeight = window.parseInt(getComputedStyle(outerNode).height);
-    if(outerNode.scrollHeight - outerNode.scrollTop === outerHeight){
-        outerNode.scrollTop = outerNode.scrollHeight - outerHeight - 1;
+    else{
+        if(outerNode.scrollLeft === 0){
+            outerNode.scrollLeft = 1;
+            return;
+        }
+        var outerWidth = window.parseInt(getComputedStyle(outerNode).width);
+        if(outerNode.scrollWidth - outerNode.scrollLeft === outerWidth){
+            outerNode.scrollLeft = outerNode.scrollWidth - outerWidth - 1;
+        }
     }
 }
 
 //bind
 var bindFunc = {
     move : function(e) {
-        curPos = e.touches ? e.touches[0].screenY : e.screenY;
+        curPosY = e.touches ? e.touches[0].screenY : e.screenY;
+        curPosX = e.touches ? e.touches[0].screenX : e.screenX;
         notPreventScrollElement(e.target) || e.preventDefault();
     },
     start : function(e){
@@ -74,7 +106,8 @@ var bindFunc = {
                 checkOuterScroll(outerScrollBox);
             }
         }
-        startPos = e.touches ? e.touches[0].screenY : e.screenY;
+        startPosY = e.touches ? e.touches[0].screenY : e.screenY;
+        startPosX = e.touches ? e.touches[0].screenX : e.screenX;
     }
 }
 var api = module.exports = {
