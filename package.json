@@ -1,7 +1,7 @@
 {
   "name": "np-scrollp",
-  "version": "1.0.2",
-  "description": "向上找到能滚的元素然后让它滚。因为太麻烦所以只写了纵向滚，<del>overflow-x是什么能吃？</del>。",
+  "version": "2.0.0",
+  "description": "解决IOS上面各种body overScroll",
   "main": "preventBounceScroll.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

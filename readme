@@ -1,22 +1,23 @@
 ##移动设备web开发防滚插件
 
-向上找到能滚的元素然后让它滚。因为太麻烦所以只写了纵向滚，<del>overflow-x是什么能吃？</del>。
+向上找到能滚的元素然后让它滚。支持xy轴各种滚。
 
-判断条件:
-1. <em style="color:#E45212;">getComputedStyle(element).overflow</em> 或者 <em style="color:#E45212;">getComputedStyle(element).overflowY</em> 的值为 <em style="color:#E45212;">scroll</em> 或者 <em style="color:#E45212;">auto</em>
-2. 向上滚动并且能滚
-3. 向下滚动并且能滚
-4. 自己看代码
+规则:
+1. overflow:scroll的元素在scroll方向上保持能够滚动状态
+2. overflow:auto的元素在scroll方向上如果能滚动则滚动，不能滚动则向上查找可滚动元素
+
 
 config:
-1. <em style="color:#E45212;">isExtraElement</em> 排除节点判定
-2. <em style="color:#E45212;">outerBounce</em> 外层滚动回弹，false为顶部、底部滚动时固定
-
+1. <em style="color:#E45212;">isExtraElement</em> 排除节点判定，input[type="range"]等
 
     require('np-preventBounceScroll')
         .config({
             //config xxx
         })
+        //初始化绑定touch事件
         .bind()
-        //把对应selector的节点移动到body里面
-        .move(document.querySelector('[data-position="fixed"]'));
+        //把fixed的节点移动到body里面, move([nodes, targetDOM])
+        .move();
+
+        //解除事件绑定（虽然写了这个api之后从来没用过）
+        .destory();

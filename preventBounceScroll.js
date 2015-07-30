@@ -1,6 +1,15 @@
+/**
+ * 单例
+ *
+ * 规则：
+    1. overscroll:scroll的元素始终可以在对应坐标方向滚动
+    2. overscroll:auto的元素如果在对应方向滚动到头则继续向上层寻找可滚动元素
+    3. 符合extra条件的元素不能作为选择元素的条件
+*/
 var startPosY, startPosX, curPosY, curPosX;
 
 var stat = false;
+
 var defaultConfig = {
     //其他不爽的element
     isExtraElement : function(element){
@@ -10,9 +19,7 @@ var defaultConfig = {
             default :
                 return false;
         }
-    },
-    //外层滚动回弹，false为顶部、底部滚动时固定
-    outerBounce : true
+    }
 };
 var config = {};
 
@@ -20,76 +27,65 @@ var notPreventScrollElement = function(element){
     return config.isExtraElement(element) || isScrollElement(element);
 }
 //能滚的element
-var isScrollElement = function(element) {
+var isScrollElement = function(element, whileTouch) {
+    var checkFunc = whileTouch ? checkIsScrollElementWhileTouch : checkIsScrollElementWhileScroll;
     while(element) {
-        if(checkScrollElement(element)){
+        if(checkFunc(element)){
             return element;
         }
         element = element.parentElement;
     }
     return false;
 }
-//获取最外层能滚的element
-var getOuterScrollElement = function(element){
-    var target;
-    while(element){
-        if(checkScrollElement(element, true)){
-            target = element;
-        }
-        element = element.parentElement;
-    }
-    return target;
-}
-
-var checkScrollElement = function(element, scrollOnly){
+var checkIsScrollElementWhileTouch = function(element){
     var style = window.getComputedStyle(element);
-    return (
-            style['overflow'] === 'scroll' 
-            || style['overflow'] === 'auto' && style['overflowY'] !== 'hidden' 
-            || style['overflowY'] === 'scroll' 
-            || style['overflowY'] === 'auto'
-        )
-        && (
-            scrollOnly || 
-            element.scrollHeight > element.clientHeight
-            && !(startPosY <= curPosY && element.scrollTop === 0)
-            && !(startPosY >= curPosY && element.scrollHeight - element.scrollTop === window.parseInt(style.height))
-        ) || (
-            style['overflow'] === 'scroll' 
-            || style['overflow'] === 'auto' && style['overflowX'] !== 'hidden' 
-            || style['overflowX'] === 'scroll' 
-            || style['overflowX'] === 'auto'
-        )
-        && (
-            scrollOnly || 
-            element.scrollWidth > element.clientWidth
-            && !(startPosX <= curPosX && element.scrollLeft === 0)
-            && !(startPosX >= curPosX && element.scrollWidth - element.scrollLeft === window.parseInt(style.width))
-        );
+    var checkScrollY = element.scrollHeight > element.clientHeight,
+        checkScrollX = element.scrollWidth > element.clientWidth;
+    var tmp, check;
+    //规则1
+    if(style.overflowY === 'scroll' && checkScrollY){
+        check = true;
+        if(element.scrollTop === 0){
+            element.scrollTop = 1;
+        }
+        tmp = element.scrollHeight - element.clientHeight;
+        if(tmp === element.scrollTop){
+            element.scrollTop = tmp - 1;
+        }
+    }
+    if(style.overflowX === 'scroll' && checkScrollX){
+        check = true;
+        if(element.scrollLeft === 0){
+            element.scrollLeft = 1;
+        }
+        tmp = element.scrollWidth - element.clientWidth;
+        if(tmp === element.scrollLeft){
+            element.scrollLeft = tmp - 1;
+        }
+    }
+    if(check){
+        return element;
+    }
 }
-//外层滚动
-var checkOuterScroll = function(outerNode){
-    var style = getComputedStyle(outerNode);
-    if(style.overflowY === 'auto' || style.overflowY === 'scroll'){
-        if(outerNode.scrollTop === 0){
-            outerNode.scrollTop = 1;
-            return;
-        }
-        var outerHeight = window.parseInt(getComputedStyle(outerNode).height);
-        if(outerNode.scrollHeight - outerNode.scrollTop === outerHeight){
-            outerNode.scrollTop = outerNode.scrollHeight - outerHeight - 1;
-        }
-    }
-    else{
-        if(outerNode.scrollLeft === 0){
-            outerNode.scrollLeft = 1;
-            return;
-        }
-        var outerWidth = window.parseInt(getComputedStyle(outerNode).width);
-        if(outerNode.scrollWidth - outerNode.scrollLeft === outerWidth){
-            outerNode.scrollLeft = outerNode.scrollWidth - outerWidth - 1;
-        }
-    }
+var checkIsScrollElementWhileScroll = function(element){
+    var style = window.getComputedStyle(element);
+    var checkScrollY = element.scrollHeight > element.clientHeight,
+        checkScrollX = element.scrollWidth > element.clientWidth;
+    //规则2
+    return (
+        (style.overflowY === 'scroll' || style['overflowY'] === 'auto')
+        && (
+            checkScrollY
+            && !(startPosY <= curPosY && element.scrollTop === 0)
+            && !(startPosY >= curPosY && element.scrollHeight - element.scrollTop === element.clientHeight)
+        ) 
+        || 
+        (style.overflowY === 'scroll' || style['overflowY'] === 'auto')
+        && 
+            checkScrollX
+            && !(startPosX <= curPosX && element.scrollLeft === 0)
+            && !(startPosX >= curPosX && element.scrollWidth - element.scrollLeft === element.clientWidth)
+        );
 }
 
 //bind
@@ -100,12 +96,7 @@ var bindFunc = {
         notPreventScrollElement(e.target) || e.preventDefault();
     },
     start : function(e){
-        if(config.outerBounce){
-            var outerScrollBox = getOuterScrollElement(e.target);
-            if(outerScrollBox && !notPreventScrollElement(e.target)){
-                checkOuterScroll(outerScrollBox);
-            }
-        }
+        var target = isScrollElement(e.target, true);
         startPosY = e.touches ? e.touches[0].screenY : e.screenY;
         startPosX = e.touches ? e.touches[0].screenX : e.screenX;
     }
@@ -122,12 +113,19 @@ var api = module.exports = {
     config : function(cfg){
         cfg = cfg || {};
         config.isExtraElement = cfg.isExtraElement || defaultConfig.isExtraElement;
-        config.outerBounce = 'outerBounce' in cfg ? cfg.outerBounce : defaultConfig.outerBounce;
         return this;
     },
     move : function(nodes, target){
-        [].forEach.call(nodes || [], function(el){
-            (target || document.body).appendChild(el);
+        nodes = nodes ? 
+            nodes : 
+            'all' in document ?
+                [].filter.call(document.all, function(el){
+                    return window.getComputedStyle(el).position === 'fixed';
+                }) : 
+                [];
+        target = target || document.body;
+        [].forEach.call(nodes, function(el){
+            target.appendChild(el);
         });
         return this;
     },
