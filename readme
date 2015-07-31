@@ -1,16 +1,31 @@
-##移动设备web开发防滚插件
+#移动设备web开发防滚插件
 
 向上找到能滚的元素然后让它滚。支持xy轴各种滚。
+主要是保留ios上overScroll的体验，同时避免出现body的overScroll导致fixed的元素不fixed
 
-规则:
-1. overflow:scroll的元素在scroll方向上保持能够滚动状态
-2. overflow:auto的元素在scroll方向上如果能滚动则滚动，不能滚动则向上查找可滚动元素
+body中加一个全屏的wrapper代替body作为容器，wrapper的scroll按需设置成scroll｜auto
+
+##规则:
+1. overflow:scroll并能滚动的元素在scroll方向上始终保持能够滚动状态
+2. overflow:auto 的元素在scroll方向上如果能滚动则滚动，不能滚动则向上查找可滚动元素
+
+##实现:
+1. touchstart:
+* 找到当前手指[0]的元素向上冒泡的第一个［规则1］元素，如果元素在滚动方向上贴到边缘，则往反方向挪动1px，使移动时能保持滚动
+2. touchmove:
+* 判断是否时排除的元素
+* 找到当前手指[0]的元素向上冒泡的符合下面条件的元素：
+    * overflow:scroll/auto
+    * scrollSize > clientSize
+    * 滚动方向上没有贴到边缘
+* 上述两个条件都不符合则evt.prentDefault();
 
 
-config:
-1. <em style="color:#E45212;">isExtraElement</em> 排除节点判定，input[type="range"]等
+##config:
+1. <em style="color:#E45212;">isExtraElement [function]</em> 排除节点判定，input[type="range"]等
 
-    require('np-preventBounceScroll')
+##使用
+    require('np-scrollp')
         .config({
             //config xxx
         })

@@ -1,6 +1,6 @@
 {
   "name": "np-scrollp",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "解决IOS上面各种body overScroll",
   "main": "preventBounceScroll.js",
   "scripts": {
