@@ -39,11 +39,9 @@ var isScrollElement = function(element, whileTouch) {
 }
 var checkIsScrollElementWhileTouch = function(element){
     var style = window.getComputedStyle(element);
-    var checkScrollY = element.scrollHeight > element.clientHeight,
-        checkScrollX = element.scrollWidth > element.clientWidth;
     var tmp, check;
     //规则1
-    if(style.overflowY === 'scroll' && checkScrollY){
+    if(style.overflowY === 'scroll' && element.scrollHeight > element.clientHeight){
         check = true;
         if(element.scrollTop === 0){
             element.scrollTop = 1;
@@ -53,7 +51,7 @@ var checkIsScrollElementWhileTouch = function(element){
             element.scrollTop = tmp - 1;
         }
     }
-    if(style.overflowX === 'scroll' && checkScrollX){
+    if(style.overflowX === 'scroll' && element.scrollWidth > element.clientWidth){
         check = true;
         if(element.scrollLeft === 0){
             element.scrollLeft = 1;
@@ -69,20 +67,18 @@ var checkIsScrollElementWhileTouch = function(element){
 }
 var checkIsScrollElementWhileScroll = function(element){
     var style = window.getComputedStyle(element);
-    var checkScrollY = element.scrollHeight > element.clientHeight,
-        checkScrollX = element.scrollWidth > element.clientWidth;
     //规则2
     return (
-        (style.overflowY === 'scroll' || style['overflowY'] === 'auto')
+        (style.overflowY === 'scroll' || style.overflowY === 'auto')
         && (
-            checkScrollY
+            element.scrollHeight > element.clientHeight
             && !(startPosY <= curPosY && element.scrollTop === 0)
             && !(startPosY >= curPosY && element.scrollHeight - element.scrollTop === element.clientHeight)
         ) 
         || 
-        (style.overflowY === 'scroll' || style['overflowY'] === 'auto')
+        (style.overflowX === 'scroll' || style.overflowX === 'auto')
         && 
-            checkScrollX
+            element.scrollWidth > element.clientWidth
             && !(startPosX <= curPosX && element.scrollLeft === 0)
             && !(startPosX >= curPosX && element.scrollWidth - element.scrollLeft === element.clientWidth)
         );
