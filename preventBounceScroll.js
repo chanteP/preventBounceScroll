@@ -97,7 +97,7 @@ var bindFunc = {
         startPosX = e.touches ? e.touches[0].screenX : e.screenX;
     }
 }
-var api = module.exports = {
+var api = {
     bind : function(){
         if(!stat){
             stat = true;
@@ -131,4 +131,7 @@ var api = module.exports = {
         document.removeEventListener('touchstart', bindFunc.start, false);
     }
 };
+if(typeof module !== 'undefined'){
+     module.exports = api;
+}
 api.config();
